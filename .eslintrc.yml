@@ -1,0 +1,134 @@
+env:
+  browser: true
+  es2021: true
+  node: true
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+overrides: []
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaVersion: latest
+  sourceType: module
+plugins:
+  - '@typescript-eslint'
+  - import
+rules: 
+  array-bracket-spacing:
+    - off
+
+  array-callback-return:
+    - error
+
+  arrow-body-style:
+    - error
+    - never
+
+  arrow-parens:
+    - error
+    - as-needed
+
+  arrow-spacing:
+    - error
+
+  babel/object-curly-spacing:
+    - off
+
+  no-await-in-loop:
+    - warn
+
+  block-spacing:
+    - error
+    - always
+
+  brace-style:
+    - error
+    - 1tbs
+
+  camelcase:
+    - off
+
+  comma-dangle:
+    - error
+    - always-multiline
+
+  comma-spacing:
+    - error
+
+  comma-style:
+    - error
+    - last
+
+  computed-property-spacing:
+    - error
+
+  curly:
+    - error
+    - all
+
+  dot-location:
+    - error
+    - property
+
+  dot-notation:
+    - error
+
+  eqeqeq:
+    - error
+
+  func-call-spacing:
+    - error
+    - never
+
+  generator-star-spacing:
+    - error
+    - both
+
+  indent:
+    - error
+    - 2
+    - SwitchCase: 0
+      MemberExpression: 1
+
+  import/first:
+    - error
+
+  import/export:
+    - error
+
+  import/no-amd:
+    - error
+
+  import/named:
+    - error
+
+  import/namespace:
+    - error
+  
+  import/no-commonjs:
+    - error
+
+  import/no-duplicates:
+    - error
+ 
+  import/no-unresolved:
+    - error
+
+  import/order:
+    - warn
+
+  import/extensions:
+    - error
+    - always
+    - js: never
+    space-before-function-paren:
+    - error
+  space-infix-ops:
+    - error
+  space-unary-ops:
+    - error
+    - nonwords: false
+      words: true
+
+  spaced-comment:
+    - error
