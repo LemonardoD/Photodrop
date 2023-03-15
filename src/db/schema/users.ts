@@ -1,8 +1,6 @@
 import { int, serial, tinyint, varchar } from "drizzle-orm/mysql-core/columns";
 import { uniqueIndex } from "drizzle-orm/mysql-core/indexes";
 import { InferModel, mysqlTable } from "drizzle-orm/mysql-core/table";
-import { db } from "../db";
-
 
 export const users = mysqlTable("users", {
     id: serial("id").primaryKey().notNull(),

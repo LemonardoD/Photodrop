@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm/expressions";
 import { userimages } from "../db/schema/userimages";
 
 
-export const  selfieUpload: RequestHandler = async (req, res) => {	
+export const  selfieUpload: RequestHandler = async (req, res) => {
   if (!req.headers.authorization) {
     return res.status(401).json({
       status: 401,
@@ -31,31 +31,32 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
         message: "Unauthorized."
       });
     }
-    const usPhone: string = req.params.phone;
-    const usrInDB = await getUserByPhone(usPhone);
-    if (!usrInDB.length) {
-      return res.status(404).json({
-        status: 404,
-        message: `We don't have phone ${usPhone} at our database.`
-      });
-    }
-    let genKey = Date.now() +"-"+ Math.floor(100000 + Math.random() * 900000).toString()+'.jpeg'
-    const s3Params = {
-        Bucket: process.env.AWS_BUCKET,
-        Key: genKey,
-        ContentType: 'image/*' // Change this to the media type of the files you want to upload
-    }
-    await db.update(users).set({ selfiepath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`}).where(eq(users.phone, usPhone));
-    await db.insert(userimages).values({
-      phone: usPhone,
-      photopath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`,
+  const usPhone: string = req.params.phone;
+  const usrInDB = await getUserByPhone(usPhone);
+  if (!usrInDB.length) {
+    return res.status(404).json({
+      status: 404,
+      message: `We don't have phone ${usPhone} at our database.`
     });
-    let uploadURL = s3.getSignedUrl('putObject', s3Params)
-    return res.header({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": true})
+  }
+  let genKey = Date.now() +"-"+ Math.floor(100000 + Math.random() * 900000).toString()+'.jpeg'
+  const s3Params = {
+    Bucket: process.env.AWS_BUCKET,
+    Key: genKey,
+    ContentType: 'image/*', // Change this to the media type of the files you want to upload
+    Expires: 5 * 60
+  }
+  await db.update(users).set({ selfiepath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`}).where(eq(users.phone, usPhone));
+  await db.insert(userimages).values({
+    phone: usPhone,
+    photopath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`,
+  });
+  let uploadURL = s3.getSignedUrl('putObject', s3Params)
+  return res.header({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": true})
     .status(200).json({
       status: 200,
       method: "PUT",
       url: uploadURL
     });
-  });       
+  });   
 };

@@ -18,4 +18,4 @@ export const confirmPaymentCheck = async function (albumName: string, phone: str
 export const confirmPhotoPayment = async function (albumName: string, phone: string, photoid: string) {
     return await db.select().from(payedalbums).where(and(eq(payedalbums.payedalbum, albumName), 
     eq(payedalbums.payedphone, phone), eq(payedalbums.payedphoto, photoid)))
-}
+};

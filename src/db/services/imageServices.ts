@@ -8,6 +8,8 @@ export const getImagesWOdate = async function (phone: string) {
         album : imageT.album,
         pathW: imageT.wtrpath,
         path: imageT.path,
+        pathWr: imageT.reswtrmpath,
+        pathr: imageT.resizerpath,
         id: imageT.id
     }).from(imageT).where(and(like(imageT.client, `%${phone}%`)))
 };
@@ -17,6 +19,8 @@ export const getImagesWdate = async function (albumName:string, phone: string) {
         album : imageT.album,
         pathW: imageT.wtrpath,
         path: imageT.path,
+        pathWr: imageT.reswtrmpath,
+        pathr: imageT.resizerpath,
         id: imageT.id,
         date: albums.date}).from(imageT)
         .leftJoin(albums, eq(albums.albumname, imageT.album))
@@ -30,6 +34,3 @@ export const getImageByAlbum = async function (albumName: string) {
 export const getImageById = async function (id: number) {
     return await db.select().from(imageT).where(eq(imageT.id, id));
 };
-
-
-
