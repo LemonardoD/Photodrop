@@ -83,7 +83,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                             'https://framology-watermark.s3.us-east-2.amazonaws.com/'),
                             resizerpath: uploadingFiles[i].location.replace('https://framology9user-image.s3.us-east-2.amazonaws.com/', 
                             'https://framology-imageresized.s3.us-east-2.amazonaws.com/'),
-                            reswtrmpath: uploadingFiles[i].location.replace('https://fframology9user-image.s3.us-east-2.amazonaws.com/', 
+                            reswtrmpath: uploadingFiles[i].location.replace('https://framology9user-image.s3.us-east-2.amazonaws.com/', 
                             'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                         });
                     } else { 
