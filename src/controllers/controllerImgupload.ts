@@ -1,18 +1,16 @@
 import { RequestHandler } from "express";
 import dotenv from "dotenv";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { eq, like } from "drizzle-orm/expressions";
+import { eq } from "drizzle-orm/expressions";
 dotenv.config({ path: __dirname+"/.env" });
 import { bot } from "../utils/bot";
 import { db } from "../db/db";
 import { acToken } from "../utils/tokens";
 import { albums } from "../db/schema/albums";
-import { users } from "../db/schema/users";
 import { Album, getAlbumInfo } from "../db/services/albumServ";
-import { image } from "../db/schema/image";
 import { uploads3Multiple } from "../utils/mutler";
 import { getPhotograpersByToken } from "../db/services/photographerServ";
-import { getImageByLikeText } from "../db/services/imageServices";
+import { getImageByLikeText, insertImage } from "../db/services/imageServices";
 import { getUser } from "../db/services/userServ";
 
 export const photoUpload: RequestHandler = async (req, res) => {
@@ -75,7 +73,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                 for (let i = 0; i < uploadingFiles.length; i++) {
                     const fileName = Date.now() +"-"+ Math.floor(100000 + Math.random() * 900000).toString() + uploadingFiles[i].originalname; // Creating img name with date stamp
                     if (arrUsrsOnPhoto[i].length && usrOnPhoto != "default") {
-                        await db.insert(image).values({  // Saving image info in DB with marked users
+                        await insertImage({  // Saving image info in DB with marked users
                             client: arrUsrsOnPhoto[i],
                             album: req.body.album,
                             imgname: fileName,
@@ -89,7 +87,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                             'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                         });
                     } else { 
-                        await db.insert(image).values({  // Saving image info in DB WO users
+                        await insertImage({  // Saving image info in DB WO users
                             album: req.body.album,
                             imgname: fileName,
                             inbucket: 1,
@@ -113,7 +111,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                     const imgInDB = await getImageByLikeText(uploadingFiles[i].originalname);
                     if(!imgInDB.length){    // Control check by name if photo already uploaded
                     let fileName = Date.now() +"-"+ Math.floor(100000 + Math.random() * 900000).toString() + uploadingFiles[i].originalname;    // Creating img name with date stamp
-                    await db.insert(image).values({  // Saving image info in DB
+                    await insertImage({  // Saving image info in DB
                         album: req.body.album,
                         imgname: fileName,
                         inbucket: 1,

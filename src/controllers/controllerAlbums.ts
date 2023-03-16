@@ -1,11 +1,9 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { db } from "../db/db";
-import { albums } from "../db/schema/albums";
 import moment from "moment";
 import { acToken } from "../utils/tokens";
 import { LengthValidation } from "../utils/loginValid";
-import { Album, getAlbumInfo, getAlbums } from "../db/services/albumServ";
+import { Album, getAlbumInfo, getAlbums, insertAlbum } from "../db/services/albumServ";
 import { Photographers, getPhotograpersByToken } from "../db/services/photographerServ";
 
 export const albumCreation: RequestHandler = async (req, res) => {
@@ -56,11 +54,11 @@ export const albumCreation: RequestHandler = async (req, res) => {
                 message: `We have album with name like that(${albumInfo.albumname}).`
                 });
         }
-        await db.insert(albums).values({
-            albumname: albumInfo.albumname,
+        await insertAlbum({albumname: albumInfo.albumname,
             albumlocation: albumInfo.albumlocation,
             date: albumInfo.date,
-            });
+            price: 5
+        });
         return res.status(201).json({ 
             status: 201,
             message: `Album ${albumInfo.albumname} successfully creater!`

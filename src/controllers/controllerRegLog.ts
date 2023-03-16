@@ -6,7 +6,7 @@ import { photograpers } from "../db/schema/photographers";
 import { eq } from 'drizzle-orm/expressions';
 import { acToken, rfToken } from "../utils/tokens";
 import { LengthValidation, loginValidation } from "../utils/loginValid";
-import { Photographers, getPhotograper, getPhotograperByReftoken } from "../db/services/photographerServ";
+import { Photographers, getPhotograper, getPhotograperByReftoken, insertPhotographerDB } from "../db/services/photographerServ";
 
 export const  insertPhotographer: RequestHandler = async (req, res) => {	
     const info: Photographers = req.body;
@@ -29,7 +29,7 @@ export const  insertPhotographer: RequestHandler = async (req, res) => {
             message: `We already have this login: ${info.login}.`
         });
     }
-    await db.insert(photograpers).values({
+    await insertPhotographerDB({
         login: info.login,
         password: bcrypt.hashSync(info.password, bcrypt.genSaltSync(10)),
         fullname: info.fullname,
