@@ -1,13 +1,16 @@
 import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from "mysql2/promise";
+import dotenv from "dotenv";
+dotenv.config();
 
 // create the connection
 export const poolConnection = mysql.createPool({
-    host: '127.0.0.1',
-    port: 3306,
-    user: 'root',
-    password: "david35221311972",
-    database: 'framology'
-});
+    host: process.env.DB_HOST as string,
+    port: Number(process.env.DB_PORT),
+    user: process.env.DB_USER as string,
+    password: process.env.DB_PASSWORD as string,
+    database: process.env.DB_NAME as string
+}); // my sql DB connection
+
 
 export const db = drizzle(poolConnection);

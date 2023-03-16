@@ -1,6 +1,5 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import * as dotenv from "dotenv";
 import { db } from "../db/db";
 import { User, users } from "../db/schema/users";
 import { tableFVerify, } from "../db/schema/verify";
@@ -8,9 +7,10 @@ import { eq } from "drizzle-orm/expressions";
 import { phoneValidation } from "../utils/usInfoValidators";
 import { acToken, rfToken } from "../utils/tokens";
 import { bot } from "../utils/bot";
-import { getUserByPhone, getUserByRefToken } from "../db/services/usersService";
-import { getVerify, getVerifyByCode } from "../db/services/verifyService";
-dotenv.config({path: __dirname+"/.env" });
+import { getUserByPhone, getUserByRefToken, insertNewUser } from "../db/services/usersService";
+import { getVerify, getVerifyByCode, insertTableFVerify } from "../db/services/verifyService";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const  regUserPhone: RequestHandler = async (req, res) => {	
     const info: User = req.body;
@@ -51,10 +51,10 @@ export const  regUserPhone: RequestHandler = async (req, res) => {
             message: "Logining."
         });
     } else {
-        await db.insert(users).values({
+        await insertNewUser({
             phone: info.phone
         });
-        await db.insert(tableFVerify).values({
+        await insertTableFVerify({
             phone: info.phone
         });
         return res.status(201).json({

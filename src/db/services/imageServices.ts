@@ -2,6 +2,9 @@ import { db } from "../db";
 import { and, eq, like } from "drizzle-orm/expressions";
 import { imageT } from "../schema/image";
 import { albums } from "../schema/albums";
+import { InferModel } from "drizzle-orm/mysql-core/table";
+
+export type Image = InferModel<typeof imageT>;
 
 export const getImagesWOdate = async function (phone: string) {
     return await db.select({

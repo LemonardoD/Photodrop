@@ -6,8 +6,9 @@ import { getUserByPhone, getUserByToken } from "../db/services/usersService";
 import { users } from "../db/schema/users";
 import { db } from "../db/db";
 import { eq } from "drizzle-orm/expressions";
-import { userimages } from "../db/schema/userimages";
-
+import dotenv from "dotenv";
+import { insertNewUserimages } from "../db/services/usrImagesService";
+dotenv.config();
 
 export const  selfieUpload: RequestHandler = async (req, res) => {
   if (!req.headers.authorization) {
@@ -47,7 +48,7 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
     Expires: 5 * 60
   }
   await db.update(users).set({ selfiepath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`}).where(eq(users.phone, usPhone));
-  await db.insert(userimages).values({
+  await insertNewUserimages({
     phone: usPhone,
     photopath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`,
   });
@@ -56,7 +57,8 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
     .status(200).json({
       status: 200,
       method: "PUT",
-      url: uploadURL
+      url: uploadURL,
+      selfie: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`
     });
   });   
 };

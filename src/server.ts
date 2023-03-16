@@ -1,14 +1,14 @@
 import express, { json } from "express";
 import Routes from "./routers/routers";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
 import { db } from "./db/db";
 import { eq } from "drizzle-orm/expressions";
 import cors  from "cors";
 import { tableFVerify } from './db/schema/verify';
 import { corsOptions } from "./utils/cors";
-dotenv.config({ path: __dirname+"/.env" });
+dotenv.config();
 import { bot } from "./utils/bot";
-import { getVerify } from "./db/services/verifyService";
+import { getVerify, insertTableFVerify } from "./db/services/verifyService";
 import { getUserByPhone } from "./db/services/usersService";
 
 const port = Number(process.env.PORT);
@@ -33,7 +33,7 @@ bot.onText(/\/getCode (.+)/, async (msg: { chat: { id: number } }, match) => {
     }
     const verufyingResult = await getVerify(phone);
     if (!verufyingResult.length) {  // Control check if it's first attempt
-      await db.insert(tableFVerify).values({  // Because of ability to verify user from 1 chat id, look up if telegram chat not verify anyone. We create DB row.
+      await insertTableFVerify({  // Because of ability to verify user from 1 chat id, look up if telegram chat not verify anyone. We create DB row.
         telegramid: chatId.toString(),
         verifycode:  code,
         timestamp: time,

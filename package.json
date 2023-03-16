@@ -22,7 +22,6 @@
     "jsonwebtoken": "^9.0.0",
     "mysql2": "^3.2.0",
     "node-telegram-bot-api": "^0.61.0",
-    "nodemon": "^2.0.20",
     "stripe": "^11.7.0",
     "tsx": "^3.12.5"
   },

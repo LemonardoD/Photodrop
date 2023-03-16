@@ -1,17 +1,16 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import * as dotenv from "dotenv";
 import { db } from "../db/db";
 import { and, eq,  } from "drizzle-orm/expressions";
-import { imageT } from "../db/schema/image";
 import { payedalbums } from "../db/schema/payedalbums";
 import { cardLengthValidation, cvsLengthCheck, numberValidation } from "../utils/paymentValid";
 import { acToken } from "../utils/tokens";
 import { getUserByToken } from "../db/services/usersService";
 import { getAlbumInfo } from "../db/services/albumServ";
-import { confirmPaymentCheck, confirmPhotoPayment, getIfPayedAlbum } from "../db/services/payedAlService";
+import { confirmPaymentCheck, confirmPhotoPayment, getIfPayedAlbum, insertPayedalbum } from "../db/services/payedAlService";
 import { getImageByAlbum, getImageById } from "../db/services/imageServices";
-dotenv.config({path: __dirname+"/.env" });
+import dotenv from "dotenv";
+dotenv.config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -110,7 +109,7 @@ export const albumPayment: RequestHandler = async (req, res) => {
             const payedInDB = await getIfPayedAlbum(body.albumname, userInDB[0].phone);
             if (payedInDB.length) {
                 await db.delete(payedalbums).where(and(eq(payedalbums.payedphone, userInDB[0].phone), eq(payedalbums.payedalbum, body.albumname)));
-                await db.insert(payedalbums).values({
+                await insertPayedalbum({
                     payedalbum: body.albumname,
                     payedphone: userInDB[0].phone,
                     payedphoto: "all"
@@ -120,7 +119,7 @@ export const albumPayment: RequestHandler = async (req, res) => {
                     message: "Successfully."
                 });
             } else {  
-                await db.insert(payedalbums).values({
+                await insertPayedalbum({
                     payedalbum: body.albumname,
                     payedphone: userInDB[0].phone,
                     payedphoto: "all"
@@ -238,7 +237,7 @@ export const photoPayment: RequestHandler = async (req, res) => {
             })
         })
         .then(async () =>{
-            await db.insert(payedalbums).values({
+            await insertPayedalbum({
                 payedalbum: imgInDB[0].album,
                 payedphone: userInDB[0].phone,
                 payedphoto: body.photoid
