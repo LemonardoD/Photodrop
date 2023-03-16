@@ -28,7 +28,6 @@
     "multer-s3": "^3.0.1",
     "mysql2": "^3.2.0",
     "node-telegram-bot-api": "^0.61.0",
-    "nodemon": "^2.0.20",
     "tsx": "^3.12.5",
     "validate-date": "^2.0.0"
   },
