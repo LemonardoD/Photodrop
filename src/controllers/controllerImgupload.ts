@@ -12,6 +12,8 @@ import { Album, getAlbumInfo } from "../db/services/albumServ";
 import { image } from "../db/schema/image";
 import { uploads3Multiple } from "../utils/mutler";
 import { getPhotograpersByToken } from "../db/services/photographerServ";
+import { getImageByLikeText } from "../db/services/imageServices";
+import { getUser } from "../db/services/userServ";
 
 export const photoUpload: RequestHandler = async (req, res) => {
     if (!req.headers.authorization) {
@@ -60,8 +62,8 @@ export const photoUpload: RequestHandler = async (req, res) => {
             if (usrOnPhoto != undefined && usrOnPhoto.replaceAll("default", "") != undefined) {    // Control check if users were marked
                 let uniqUsrs = [...new Set(usrOnPhoto.replaceAll(",", "*").split("*"))]  // Create arr with unik users
                 for (let i = 0; i < uniqUsrs.length; i++) {  // Search every usr in db
-                    const usrInDB = await db.select(users).where(eq(users.phone, uniqUsrs[i]));
-                    if (usrInDB.length) {
+                    const usrInDB = await getUser(uniqUsrs[i]);
+                    if (usrInDB.length && usrInDB[0].telebotnum != null) {
                     try {
                         bot.sendMessage(usrInDB[0].telebotnum, "Photo Drop. U got new photos!")  // *SMS NOTIF* 
                     } catch (err) {
@@ -100,8 +102,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                             'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                         });
                     }                   
-                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location.replace('https://framology9user-image.s3.us-east-2.amazonaws.com/', 
-                    'https://framology-watermark.s3.us-east-2.amazonaws.com/')}).where(eq(albums.albumname, req.body.album));    // Updating main album img
+                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location}).where(eq(albums.albumname, req.body.album));    // Updating main album img
                     }
                     return res.status(201).json({ 
                         status: 201,
@@ -109,7 +110,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                     }); 
             } else {
                 for (let i = 0; i < uploadingFiles.length; i++) {
-                    const imgInDB = await db.select(image).where(like(image.imgname, `%${uploadingFiles[i].originalname}%`));
+                    const imgInDB = await getImageByLikeText(uploadingFiles[i].originalname);
                     if(!imgInDB.length){    // Control check by name if photo already uploaded
                     let fileName = Date.now() +"-"+ Math.floor(100000 + Math.random() * 900000).toString() + uploadingFiles[i].originalname;    // Creating img name with date stamp
                     await db.insert(image).values({  // Saving image info in DB
@@ -124,8 +125,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                         reswtrmpath: uploadingFiles[i].location.replace('https://fframology9user-image.s3.us-east-2.amazonaws.com/', 
                         'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                     });                    
-                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location.replace('https://framology9user-image.s3.us-east-2.amazonaws.com/', 
-                    'https://framology-imageresized.s3.us-east-2.amazonaws.com/')}).where(eq(albums.albumname, req.body.album));    // Updating main album img
+                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location}).where(eq(albums.albumname, req.body.album));    // Updating main album img
                     }
                 }
                 return res.status(201).json({ 

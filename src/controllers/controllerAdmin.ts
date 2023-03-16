@@ -8,8 +8,6 @@ import { LengthValidation } from "../utils/loginValid";
 import { getImageById } from "../db/services/imageServices";
 import { getAlbumInfo, getSpecificAl } from "../db/services/albumServ";
 import { Photographers, getPhotograper, getPhotograpers } from "../db/services/photographerServ";
-import { SpecificAlbum } from "../interfaces/interface";
-
 export const  activatePhotographer: RequestHandler = async (req, res) => {
     const info: Photographers = req.body;
     if (!info.login) {
@@ -69,7 +67,7 @@ export const getAlbum: RequestHandler = async (req, res) => {
         
     }
     const album: string = req.params.album;
-    const result: SpecificAlbum[] = await getSpecificAl(album);
+    const result = await getSpecificAl(album);
     if (!result.length) {
         return res.status(404).json({ 
             status: 404,
@@ -78,7 +76,7 @@ export const getAlbum: RequestHandler = async (req, res) => {
     }
     return res.status(200).json({ 
         status: 200,
-        message: result.map(function(el: SpecificAlbum) {
+        message: result.map(function(el) {
             if(el.photo === null || el.photoid === null) {
                 return null
             } else if(el.clients === null) {
@@ -127,7 +125,7 @@ export const addUsersOnPhoto: RequestHandler = async (req, res) => {
             message: "Length of full name must be more than 5."
         });
     }
-    await db.update(image).set({ fullname: users.toLowerCase().replaceAll(/[^A-Za-z]/g, ""), client: users}).where(eq(image.id, imgid));
+    await db.update(image).set({ client: users}).where(eq(image.id, imgid));
     return res.status(200).json({ 
         status: 200,
         message: `${users} were marcked on this photo.`

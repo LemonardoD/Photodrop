@@ -1,8 +1,8 @@
 import multer  from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
-import * as dotenv from "dotenv";
-dotenv.config({ path: __dirname+"/.env" });
+import dotenv from "dotenv";
+dotenv.config();
 import AWS from "aws-sdk";
 
 export const s3 = new S3Client({ region: process.env.REGION });
