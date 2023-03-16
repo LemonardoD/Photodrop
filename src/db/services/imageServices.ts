@@ -27,7 +27,7 @@ export const getImagesWdate = async function (albumName:string, phone: string) {
         id: imageT.id,
         date: albums.date}).from(imageT)
         .leftJoin(albums, eq(albums.albumname, imageT.album))
-        .where(and(like(imageT.client, `%${phone}`), eq(imageT.album, albumName)))
+        .where(and(like(imageT.client, `%${phone}%`), eq(imageT.album, albumName)))
 };
 
 export const getImageByAlbum = async function (albumName: string) {

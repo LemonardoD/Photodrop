@@ -47,10 +47,10 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
     ContentType: 'image/*', // Change this to the media type of the files you want to upload
     Expires: 5 * 60
   }
-  await db.update(users).set({ selfiepath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`}).where(eq(users.phone, usPhone));
+  await db.update(users).set({ selfiepath: `https://framology9-image.s3.us-east-2.amazonaws.com/${genKey}`}).where(eq(users.phone, usPhone));
   await insertNewUserimages({
     phone: usPhone,
-    photopath: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`,
+    photopath: `https://framology9-image.s3.us-east-2.amazonaws.com/${genKey}`,
   });
   let uploadURL = s3.getSignedUrl('putObject', s3Params)
   return res.header({"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": true})
@@ -58,7 +58,7 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
       status: 200,
       method: "PUT",
       url: uploadURL,
-      selfie: `https://framology9user-image.s3.us-east-2.amazonaws.com/${genKey}`
+      selfie: `https://framology9-image.s3.us-east-2.amazonaws.com/${genKey}`
     });
   });   
 };
