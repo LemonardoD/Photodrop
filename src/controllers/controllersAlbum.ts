@@ -121,7 +121,7 @@ export const userOneAlbum: RequestHandler = async (req, res) => {
         if (!payedInfo.length) {
             return res.status(200).json({
                 status: 200,
-                message: albumResultInfo.map(function(el) {return {album: el.album, aldate: el.date, path: el.pathW, resizedpath: el.pathWr, id: el.id, marked: true}})
+                message: albumResultInfo.map(function(el) {return {album: el.album, aldate: el.date, path: el.pathW, resizeppath: el.pathWr, id: el.id, marked: true}})
             });
         }
         let finalRes = albumResultInfo.map(function(el) {
@@ -130,7 +130,7 @@ export const userOneAlbum: RequestHandler = async (req, res) => {
                     album : el.album,
                     aldate: el.date,
                     path: el.path,
-                    resizedpath: el.pathr,
+                    resizeppath: el.pathr,
                     id: el.id
                 }
             } else if (payedCheck.includes(Number(el.id))) {  // if id of photo in control array give wo watermark
@@ -138,7 +138,7 @@ export const userOneAlbum: RequestHandler = async (req, res) => {
                     album : el.album,
                     aldate: el.date,
                     path: el.path,
-                    resizedpath: el.pathr,
+                    resizeppath: el.pathr,
                     id: el.id
                 }
             } else {
@@ -146,7 +146,7 @@ export const userOneAlbum: RequestHandler = async (req, res) => {
                     album : el.album,
                     aldate: el.date,
                     path: el.pathW,
-                    resizedpath: el.pathWr,
+                    resizeppath: el.pathWr,
                     id: el.id,
                     marked: true
                 }
