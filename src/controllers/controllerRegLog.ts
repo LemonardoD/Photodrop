@@ -1,12 +1,9 @@
 import { RequestHandler } from "express";
 import bcrypt from "bcrypt";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { db } from "../db/db";
-import { photograpers } from "../db/schema/photographers";
-import { eq } from 'drizzle-orm/expressions';
 import { acToken, rfToken } from "../utils/tokens";
 import { LengthValidation, loginValidation } from "../utils/loginValid";
-import { Photographers, getPhotograper, getPhotograperByReftoken, insertPhotographerDB } from "../db/services/photographerServ";
+import { Photographers, getPhotograper, getPhotograperByReftoken, insertPhotographerDB, updateTokens } from "../db/services/photographerServ";
 
 export const  insertPhotographer: RequestHandler = async (req, res) => {	
     const info: Photographers = req.body;
@@ -61,7 +58,7 @@ export const  loginPhotographer: RequestHandler = async (req, res) => {
                 res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
                 res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
                 // adding tokens to DB
-                await db.update(photograpers).set({ accesstoken: accessToken, refreshtoken: refreshToken}).where(eq(photograpers.login, logInInfo.login));
+                await updateTokens(logInInfo.login, accessToken, refreshToken);
                 return res.status(200).json({ 
                     status: 200,
                     message: `Welcome ${logInInfo.login}`,
@@ -117,8 +114,7 @@ export const refeshTokens: RequestHandler = async (req, res) => {
         res.cookie("login", tokenInDB[0].login, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
         res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
         res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        await db.update(photograpers).set({ accesstoken: accessToken}).where(eq(photograpers.login, tokenInDB[0].login));
-        await db.update(photograpers).set({ refreshtoken: refreshToken}).where(eq(photograpers.login, tokenInDB[0].login));
+        await updateTokens(tokenInDB[0].login, accessToken, refreshToken);
         return res.json({ accessToken,  refreshToken});   
     })
 };

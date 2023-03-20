@@ -8,12 +8,12 @@ import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 export type Album = InferModel<typeof albums>;
 export type NewAlbum = InferModel<typeof albums, 'insert'>;
 
-export const getAlbumInfo = async function (albumName: string) {
+export async function getAlbumInfo(albumName: string) {
     return await db.select().from(albums).where(eq(albums.albumname, albumName));
 };
 
-export const getSpecificAl = async function (albumName: string) {
-    return await db.select({
+export async function getSpecificAl(albumName: string) {
+    const result = await db.select({
         albumid: albums.id,
         albumname: albums.albumname,
         albumlocation: albums.albumlocation,
@@ -21,13 +21,32 @@ export const getSpecificAl = async function (albumName: string) {
         photo: image.path,
         clients:image.client,
         photoid: image.id
-      }).from(albums).leftJoin(image, eq(image.album, albumName)).where(eq(albums.albumname, albumName))
+    }).from(albums).leftJoin(image, eq(image.album, albumName)).where(eq(albums.albumname, albumName))
+    return result.map(function(el) {
+        if(el.photo === null || el.photoid === null) {
+            return null
+        } else if(el.clients === null) {
+            return {id: el.albumid, albumname: el.albumname, albumlocation: el.albumlocation, albumdate: el.albumdate,
+                photo: el.photo, idphoto: el.photoid}
+        } else {
+            return {id: el.albumid, albumname: el.albumname, albumlocation: el.albumlocation, albumdate: el.albumdate,
+                photo: el.photo, clients: el.clients, idphoto: el.photoid}
+        }
+    })
 };
 
-export const getAlbums = async function () {
+export async function getAlbums() {
     return await db.select().from(albums)
 };
 
 export async function insertAlbum(album: NewAlbum): Promise<MySqlRawQueryResult> {
     return db.insert(albums).values(album);
+};
+
+export async function updateAlbumPrice(album: string, price: number): Promise<MySqlRawQueryResult> {
+    return  db.update(albums).set({ price: price}).where(eq(albums.albumname, album));
+};
+
+export async function updateMainPhoto(album: string, mainphoto: string) {
+    return  db.update(albums).set({ mainphoto: mainphoto}).where(eq(albums.albumname, album));
 };

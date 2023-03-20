@@ -1,13 +1,9 @@
 import { RequestHandler } from "express";
-import { db } from "../db/db";
-import { photograpers } from "../db/schema/photographers";
-import { albums } from "../db/schema/albums";
-import { eq } from 'drizzle-orm/expressions';
-import { image } from "../db/schema/image";
 import { LengthValidation } from "../utils/loginValid";
-import { getImageById } from "../db/services/imageServices";
-import { getAlbumInfo, getSpecificAl } from "../db/services/albumServ";
-import { Photographers, getPhotograper, getPhotograpers } from "../db/services/photographerServ";
+import { addClients, getImageById } from "../db/services/imageServices";
+import { getAlbumInfo, getSpecificAl, updateAlbumPrice } from "../db/services/albumServ";
+import { Photographers, aprovingPhotographer, getPhotograper, getPhotograpers } from "../db/services/photographerServ";
+
 export const  activatePhotographer: RequestHandler = async (req, res) => {
     const info: Photographers = req.body;
     if (!info.login) {
@@ -23,7 +19,7 @@ export const  activatePhotographer: RequestHandler = async (req, res) => {
             message: `Sorry there is no Photographer with such login ${info.login}.`
         });
     }
-    await db.update(photograpers).set({ aproved: 1}).where(eq(photograpers.login, info.login));  // aprove photorgapher status in DB
+    await aprovingPhotographer(info.login);  // aprove photorgapher status in DB
     return res.status(200).json({ 
         status: 200,
         message: `Photographer ${info.login} successfully activated!`
@@ -44,10 +40,10 @@ export const PhotographersList: RequestHandler = async (req, res) => {
             message: "You do not have access rights."
         });
     }
-    const allPhotographers: Photographers[]  = await getPhotograpers();
+    const allPhotographers  = await getPhotograpers();
     return res.status(200).json({ 
         status: 200,
-        message: allPhotographers.map(function(el:Photographers) {return {login: el.login , fullName: el.fullname, email: el.email, aproved: el.aproved}})
+        message: allPhotographers
     });
 };
 
@@ -76,17 +72,7 @@ export const getAlbum: RequestHandler = async (req, res) => {
     }
     return res.status(200).json({ 
         status: 200,
-        message: result.map(function(el) {
-            if(el.photo === null || el.photoid === null) {
-                return null
-            } else if(el.clients === null) {
-                return {id: el.albumid, albumname: el.albumname, albumlocation: el.albumlocation, albumdate: el.albumdate,
-                    photo: el.photo, idphoto: el.photoid}
-            } else {
-                return {id: el.albumid, albumname: el.albumname, albumlocation: el.albumlocation, albumdate: el.albumdate,
-                    photo: el.photo, clients: el.clients, idphoto: el.photoid}
-            }
-        })
+        message: result
     });
 };
 
@@ -125,7 +111,7 @@ export const addUsersOnPhoto: RequestHandler = async (req, res) => {
             message: "Length of full name must be more than 5."
         });
     }
-    await db.update(image).set({ client: users}).where(eq(image.id, imgid));
+    await addClients(imgid, users);
     return res.status(200).json({ 
         status: 200,
         message: `${users} were marcked on this photo.`
@@ -167,7 +153,7 @@ export const addAlbumPrice: RequestHandler = async (req, res) => {
             message: "Price must be greater than zero."
         });
     }
-    await db.update(albums).set({ price: price}).where(eq(albums.albumname, albumName));
+    await updateAlbumPrice(albumName, price);
     return res.status(200).json({ 
         status: 200,
         message: "Price added."

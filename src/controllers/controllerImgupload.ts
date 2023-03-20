@@ -1,13 +1,10 @@
 import { RequestHandler } from "express";
 import dotenv from "dotenv";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { eq } from "drizzle-orm/expressions";
 dotenv.config({ path: __dirname+"/.env" });
 import { bot } from "../utils/bot";
-import { db } from "../db/db";
 import { acToken } from "../utils/tokens";
-import { albums } from "../db/schema/albums";
-import { Album, getAlbumInfo } from "../db/services/albumServ";
+import { Album, getAlbumInfo, updateMainPhoto } from "../db/services/albumServ";
 import { uploads3Multiple } from "../utils/mutler";
 import { getPhotograpersByToken } from "../db/services/photographerServ";
 import { getImageByLikeText, insertImage } from "../db/services/imageServices";
@@ -100,7 +97,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                             'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                         });
                     }                   
-                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location}).where(eq(albums.albumname, req.body.album));    // Updating main album img
+                    await updateMainPhoto(req.body.album, uploadingFiles[i].location);    // Updating main album img
                     }
                     return res.status(201).json({ 
                         status: 201,
@@ -123,7 +120,7 @@ export const photoUpload: RequestHandler = async (req, res) => {
                         reswtrmpath: uploadingFiles[i].location.replace('https://fframology9user-image.s3.us-east-2.amazonaws.com/', 
                         'https://framology-wtrmresized.s3.us-east-2.amazonaws.com/'), 
                     });                    
-                    await db.update(albums).set({ mainphoto: uploadingFiles[i].location}).where(eq(albums.albumname, req.body.album));    // Updating main album img
+                    await updateMainPhoto(req.body.album, uploadingFiles[i].location);    // Updating main album img
                     }
                 }
                 return res.status(201).json({ 
