@@ -1,13 +1,10 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { db } from "../db/db";
-import { and, eq,  } from "drizzle-orm/expressions";
-import { payedalbums } from "../db/schema/payedalbums";
 import { cardLengthValidation, cvsLengthCheck, numberValidation } from "../utils/paymentValid";
 import { acToken } from "../utils/tokens";
 import { getUserByToken } from "../db/services/usersService";
 import { getAlbumInfo } from "../db/services/albumServ";
-import { confirmPaymentCheck, confirmPhotoPayment, getIfPayedAlbum, insertPayedalbum } from "../db/services/payedAlService";
+import { confirmPaymentCheck, confirmPhotoPayment, delOnePhoto, getIfPayedAlbum, insertPayedalbum } from "../db/services/payedAlService";
 import { getImageByAlbum, getImageById } from "../db/services/imageServices";
 import dotenv from "dotenv";
 dotenv.config();
@@ -108,7 +105,7 @@ export const albumPayment: RequestHandler = async (req, res) => {
         .then(async () =>{
             const payedInDB = await getIfPayedAlbum(body.albumname, userInDB[0].phone);
             if (payedInDB.length) {
-                await db.delete(payedalbums).where(and(eq(payedalbums.payedphone, userInDB[0].phone), eq(payedalbums.payedalbum, body.albumname)));
+                await delOnePhoto(userInDB[0].phone, body.albumname);
                 await insertPayedalbum({
                     payedalbum: body.albumname,
                     payedphone: userInDB[0].phone,

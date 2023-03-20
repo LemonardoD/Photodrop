@@ -1,14 +1,11 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { db } from "../db/db";
-import { User, users } from "../db/schema/users";
-import { tableFVerify, } from "../db/schema/verify";
-import { eq } from "drizzle-orm/expressions";
+import { User } from "../db/schema/users";
 import { phoneValidation } from "../utils/usInfoValidators";
 import { acToken, rfToken } from "../utils/tokens";
 import { bot } from "../utils/bot";
-import { getUserByPhone, getUserByRefToken, insertNewUser } from "../db/services/usersService";
-import { getVerify, getVerifyByCode, insertTableFVerify } from "../db/services/verifyService";
+import { addTokens, getUserByPhone, getUserByRefToken, insertNewUser, updateTokens } from "../db/services/usersService";
+import { getVerify, getVerifyByCode, insertTableFVerify, setZeroVerify, updateTableFVerify } from "../db/services/verifyService";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -41,8 +38,7 @@ export const  regUserPhone: RequestHandler = async (req, res) => {
         if (verufyingResult[0].trycount === 0) {  // Control check if it's first attempt
             bot.sendMessage(chatId, code);
             bot.sendMessage(chatId, "Success. You have only 3 minutes.");
-            await db.update(tableFVerify).set({ telegramid: chatId.toString(), verifycode: code, timestamp: time, trycount: 1})
-            .where(eq(tableFVerify.phone, info.phone));  // else if  telegram chat verify someone, updating DB row with control numbers.
+            await updateTableFVerify(chatId.toString(), code, time, info.phone, 1);  // else if  telegram chat verify someone, updating DB row with control numbers.
         } else if (verufyingResult[0].trycount as number >= 1) {  // If attempt not first guiding to get second code
             bot.sendMessage(chatId, "You must click resend code.");
         }
@@ -91,7 +87,7 @@ export const refeshTokens: RequestHandler = async (req, res) => {
         const refreshToken = jwt.sign({data: phone}, rfToken, {expiresIn: "1d"});
         res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});   // Assigning tokens in http-only cookie
         res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        await db.update(users).set({accesstoken: accessToken, refreshtoken: refreshToken}).where(eq(users.phone, phone));  // Adding tokens to DB
+        await updateTokens(phone, accessToken, refreshToken);  // Adding tokens to DB
         return res.json({accessToken, refreshToken });
     });
     
@@ -133,13 +129,12 @@ export const confirmTelebotVerify: RequestHandler = async (req, res) => {
             message: "User not found.",
         });  
     }
-    await db.update(tableFVerify).set({trycount: 0}).where(eq(tableFVerify.telegramid, verifyInDB[0].telegramid as string));
+    await setZeroVerify(verifyInDB[0].telegramid as string);
     const accessToken = jwt.sign({data: phone},acToken, {expiresIn: "30m"});  // Creating  tokens
     const refreshToken = jwt.sign({data: phone}, rfToken, {expiresIn: "1d"});
     res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});  // Assigning tokens in http-only cookie
     res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-    await db.update(users).set({accesstoken: accessToken, refreshtoken: refreshToken, phoneisveryfied:1,
-        telebotnum: Number(verifyInDB[0].telegramid)}).where(eq(users.phone, phone));  // Adding tokens to DB
+    await addTokens(phone, verifyInDB[0].telegramid, accessToken, refreshToken);  // Adding tokens to DB
     return res.status(200).json({
         status: 200,
         message: "Confirmed",
@@ -198,8 +193,7 @@ export const resendCode: RequestHandler = async (req, res) => {
         bot.sendMessage(chatId, "At first type /getCode");
     } else if (verufyingResult[0].trycount === 1) {
         const time: number = new Date().getTime() / 1000
-        await db.update(tableFVerify).set({ verifycode: code, timestamp: time, trycount: verufyingResult[0].trycount+1})
-        .where(eq(tableFVerify.phone, req.body.phone));  // Updating DB with new code and timestamp
+        await updateTableFVerify(chatId.toString(), code, time, req.body.phone, verufyingResult[0].trycount+1);  // Updating DB with new code and timestamp
         bot.sendMessage(chatId, code);
         bot.sendMessage(chatId, "Success. You have only 3 minutes.");
     }

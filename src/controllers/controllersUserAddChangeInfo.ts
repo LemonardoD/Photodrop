@@ -1,11 +1,8 @@
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { db } from "../db/db";
-import { users } from "../db/schema/users";
-import { eq } from "drizzle-orm/expressions";
 import { emailValidation, nameLengthCheck, nameValidation, phoneValidation } from "../utils/usInfoValidators";
 import { acToken } from "../utils/tokens";
-import { getUserByEmail, getUserByPhone, getUserByToken } from "../db/services/usersService";
+import { MakeUnsubNotiff, getUserByEmail, getUserByPhone, getUserByToken, updateEmail, updateName, updateNotiff, updatePhone } from "../db/services/usersService";
 
 export const addChangeName: RequestHandler = async (req, res) => {
     if (!req.headers.authorization) {
@@ -42,7 +39,7 @@ export const addChangeName: RequestHandler = async (req, res) => {
                 message: "Full name allow only letters, also length more than 3 letters."
             });
         }
-        await db.update(users).set({fullname: fullname}).where(eq(users.accesstoken, accessToken));
+        await updateName(fullname, accessToken);
         return res.status(200).json({
             status: 200,
             message: `Hello there ${fullname}!`
@@ -92,7 +89,7 @@ export const addChangeEmail: RequestHandler = async (req, res) => {
                 message: "Email like that alredy exist."
             });
         }
-        await db.update(users).set({email: email}).where(eq(users.accesstoken, accessToken));
+        await updateEmail(email, accessToken);
         return res.status(200).json({
             status: 200,
             message: "Email added!"
@@ -137,7 +134,7 @@ export const changePhone: RequestHandler = async (req, res) => {
         }
         const userInDB = await getUserByPhone(phone);  // Check if we already have phone like that
         if (!userInDB.length) {
-            await db.update(users).set({phone: phone, accesstoken: null, refreshtoken: null, phoneisveryfied: 0}).where(eq(users.accesstoken, accessToken));
+            await updatePhone(phone, accessToken);
             return res.status(200).json({
                 status: 200,
                 message: "Phone changed, please confirm your new number by TelegramBot confirmation."
@@ -182,20 +179,20 @@ export const notificationSettings: RequestHandler = async (req, res) => {
             });
         }
         if (unsubscribenotif === 1) {  // if unsubscribe is  1, setting phone & email notification at 0
-            await db.update(users).set({phonenotif: 0, emailnotif: 0, unsubscribenotif: 1}).where(eq(users.accesstoken, accessToken));
+            await MakeUnsubNotiff(accessToken);
             return res.status(200).json({
                 status: 200,
                 message: "Notification settings successfully changed."
             });
         }
         if (Number(phoneNotif) === 0 && Number(emailNotif) === 0) {  // if phone & email notification is 0, setting unsubscribe at 1 
-            await db.update(users).set({phonenotif: 0, emailnotif: 0, unsubscribenotif: 1}).where(eq(users.accesstoken, accessToken));
+            await MakeUnsubNotiff(accessToken);
             return res.status(200).json({
                 status: 200,
                 message: "Notification settings successfully changed."
             });
         }
-        await db.update(users).set({phonenotif: Number(phoneNotif), emailnotif: Number(emailNotif), unsubscribenotif: 0}).where(eq(users.accesstoken, accessToken));
+        await updateNotiff(Number(phoneNotif), Number(emailNotif), accessToken);
         return res.status(200).json({
             status: 200,
             message: "Notification settings successfully changed."

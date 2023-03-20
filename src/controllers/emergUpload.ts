@@ -3,11 +3,7 @@ import multer  from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import { RequestHandler } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
-import { userimages } from "../db/schema/userimages";
-import { db } from "../db/db";
-import { users } from "../db/schema/users";
-import { eq } from "drizzle-orm/expressions";
-import { getUserByPhone, getUserByToken } from "../db/services/usersService";
+import { getUserByPhone, getUserByToken, updateSelfiePath } from "../db/services/usersService";
 import { acToken } from "../utils/tokens";
 import { insertNewUserimages } from "../db/services/usrImagesService";
 
@@ -65,16 +61,16 @@ export const  selfieUpload: RequestHandler = async (req, res) => {
             });
         }
         const file = req.file as Express.MulterS3.File;
-        await db.update(users).set({ selfiepath: file.location}).where(eq(users.phone, usPhone));
+        await updateSelfiePath(usPhone, file.location);
         await insertNewUserimages({
-            phone: usPhone,
-            photopath: file.location,
-            });
+          phone: usPhone,
+          photopath: file.location,
+        });
         return res.status(201).json({
             status: 201,
             message: "Selfie added!",
             selfie: file.location
-            }); 
+          });
       })
     })
 }
