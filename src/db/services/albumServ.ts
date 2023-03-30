@@ -5,6 +5,6 @@ import { eq } from "drizzle-orm/expressions";
 
 export type Album = InferModel<typeof albums>;
 
-export const getAlbumInfo = async function (albumName: string) {
-    return await db.select().from(albums).where(eq(albums.albumname, albumName));
+export const getAlbumInfo = function (albumName: string) {
+    return db.select().from(albums).where(eq(albums.albumname, albumName));
 };

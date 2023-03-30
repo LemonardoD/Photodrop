@@ -1,10 +1,9 @@
 import { RequestHandler } from "express";
-import jwt, { VerifyErrors } from "jsonwebtoken";
 import { User } from "../db/schema/users";
 import { phoneValidation } from "../utils/usInfoValidators";
-import { acToken, rfToken } from "../utils/tokens";
+import { accessTokenCreation, refreshTokenCreation } from "../utils/tokens";
 import { bot } from "../utils/bot";
-import { addTokens, getUserByPhone, getUserByRefToken, insertNewUser, updateTokens } from "../db/services/usersService";
+import { addTokens, getUserByPhone, insertNewUser, updateTokens } from "../db/services/usersService";
 import { getVerify, getVerifyByCode, insertTableFVerify, setZeroVerify, updateTableFVerify } from "../db/services/verifyService";
 import dotenv from "dotenv";
 dotenv.config();
@@ -61,36 +60,14 @@ export const  regUserPhone: RequestHandler = async (req, res) => {
 };
 
 export const refeshTokens: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({
-            status: 401,
-            message: "Unauthorized."
-        });
-    }
-    const reqToken: string = req.headers.authorization.replace("Bearer ", "");
-    jwt.verify(reqToken, rfToken, async (err:  VerifyErrors | null) => {
-        if (err) {
-            return res.status(403).json({
-                status: 403,
-                message: "Refresh expiered."
-            });
-        }
-        const usrInDB = await getUserByRefToken(reqToken);
-        if (!usrInDB.length) {
-            return res.status(404).json({
-                status: 404,
-                message: "No such token."
-            });
-        }
-        const phone = usrInDB[0].phone;
-        const accessToken = jwt.sign({data: phone},acToken, {expiresIn: "30m"});  // Creating  tokens
-        const refreshToken = jwt.sign({data: phone}, rfToken, {expiresIn: "1d"});
-        res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});   // Assigning tokens in http-only cookie
-        res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        await updateTokens(phone, accessToken, refreshToken);  // Adding tokens to DB
-        return res.json({accessToken, refreshToken });
-    });
-    
+    const phone = req.body.phone;
+    const accessToken = await accessTokenCreation(phone);// Creating  tokens
+    const refreshToken = await refreshTokenCreation(phone);
+    res.cookie("phone", phone, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});   // Assigning tokens in http-only cookie
+    res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    await updateTokens(phone, accessToken, refreshToken);  // Adding tokens to DB
+    return res.json({accessToken, refreshToken });   
 };
 
 export const confirmTelebotVerify: RequestHandler = async (req, res) => {
@@ -130,8 +107,9 @@ export const confirmTelebotVerify: RequestHandler = async (req, res) => {
         });  
     }
     await setZeroVerify(verifyInDB[0].telegramid as string);
-    const accessToken = jwt.sign({data: phone},acToken, {expiresIn: "30m"});  // Creating  tokens
-    const refreshToken = jwt.sign({data: phone}, rfToken, {expiresIn: "1d"});
+    const accessToken = await accessTokenCreation(phone);// Creating  tokens
+    const refreshToken = await refreshTokenCreation(phone);
+    res.cookie("phone", phone, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
     res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});  // Assigning tokens in http-only cookie
     res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
     await addTokens(phone, verifyInDB[0].telegramid, accessToken, refreshToken);  // Adding tokens to DB

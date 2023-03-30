@@ -7,10 +7,10 @@ import { MySqlRawQueryResult } from "drizzle-orm/mysql2";
 export type Userimages = InferModel<typeof userimages>;
 export type NewUserimages = InferModel<typeof userimages, 'insert'>; 
 
-export const getUsSelfies = async function (phone: string) {
-    return await db.select().from(userimages).where(eq(userimages.phone, phone))
+export const getUsSelfies = function (phone: string) {
+    return db.select().from(userimages).where(eq(userimages.phone, phone))
 };
 
-export async function insertNewUserimages(NewUserimages: NewUserimages): Promise<MySqlRawQueryResult> {
+export function insertNewUserimages(NewUserimages: NewUserimages): Promise<MySqlRawQueryResult> {
     return db.insert(userimages).values(NewUserimages);
 };

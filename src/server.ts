@@ -1,22 +1,16 @@
 import express, { json } from "express";
 import Routes from "./routers/routers";
 import dotenv from "dotenv";
-import { db } from "./db/db";
-import { eq } from "drizzle-orm/expressions";
 import cors  from "cors";
-import { tableFVerify } from './db/schema/verify';
-import { corsOptions } from "./utils/cors";
 dotenv.config();
 import { bot } from "./utils/bot";
-import { getVerify, insertTableFVerify } from "./db/services/verifyService";
+import { getVerify, insertTableFVerify, updateTableFVerify } from "./db/services/verifyService";
 import { getUserByPhone } from "./db/services/usersService";
 
 const port = Number(process.env.PORT);
 const host = process.env.HOST as string;
 const app = express();
-
-app.options("*", cors(corsOptions));
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/", Routes);
@@ -47,8 +41,7 @@ bot.onText(/\/getCode (.+)/, async (msg: { chat: { id: number } }, match) => {
     } else if (verufyingResult.length) {
       bot.sendMessage(chatId, code);
       bot.sendMessage(chatId, "Success. You have only 3 minutes.");
-      await db.update(tableFVerify).set({ telegramid: chatId.toString(), verifycode: code, timestamp: time, trycount: 1})
-      .where(eq(tableFVerify.phone, phone));  // else if  telegram chat verify someone, updating DB row with control numbers.
+      await updateTableFVerify(chatId.toString(), code, time, phone, 1);  // else if  telegram chat verify someone, updating DB row with control numbers.
     }
   }
 });

@@ -6,8 +6,8 @@ import { InferModel } from "drizzle-orm/mysql-core/table";
 
 export type Image = InferModel<typeof imageT>;
 
-export const getImagesWOdate = async function (phone: string) {
-    return await db.select({
+export const getImagesWOdate = function (phone: string) {
+    return db.select({
         album : imageT.album,
         pathW: imageT.wtrpath,
         path: imageT.path,
@@ -17,8 +17,8 @@ export const getImagesWOdate = async function (phone: string) {
     }).from(imageT).where(and(like(imageT.client, `%${phone}%`)))
 };
 
-export const getImagesWdate = async function (albumName:string, phone: string) {
-    return await db.select({
+export const getImagesWdate = function (albumName:string, phone: string) {
+    return db.select({
         album : imageT.album,
         pathW: imageT.wtrpath,
         path: imageT.path,
@@ -30,10 +30,10 @@ export const getImagesWdate = async function (albumName:string, phone: string) {
         .where(and(like(imageT.client, `%${phone}%`), eq(imageT.album, albumName)))
 };
 
-export const getImageByAlbum = async function (albumName: string) {
-    return await db.select().from(imageT).where(eq(imageT.album, albumName));
+export const getImageByAlbum = function (albumName: string) {
+    return db.select().from(imageT).where(eq(imageT.album, albumName));
 };
 
-export const getImageById = async function (id: number) {
-    return await db.select().from(imageT).where(eq(imageT.id, id));
+export const getImageById = function (id: number) {
+    return db.select().from(imageT).where(eq(imageT.id, id));
 };
