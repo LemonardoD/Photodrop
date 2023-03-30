@@ -12,7 +12,7 @@ export const  activatePhotographer: RequestHandler = async (req, res) => {
             message: "U must fill up login to activate the user."
         });
     }
-    const result: Photographers[] = await getPhotograper(info.login);
+    const result = await getPhotograper(info.login);
     if (result.length) {
         return res.status(404).json({ 
             status: 404,
@@ -27,19 +27,6 @@ export const  activatePhotographer: RequestHandler = async (req, res) => {
 };
 
 export const PhotographersList: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ 
-            status: 401,
-            message: "Unauthorized."
-        });
-    }
-    const accessToken: string = req.headers.authorization.replace("Bearer ", "");
-    if (accessToken != "admin") {   //imitation of admin user
-        return res.status(403).json({ 
-            status: 403,
-            message: "You do not have access rights."
-        });
-    }
     const allPhotographers  = await getPhotograpers();
     return res.status(200).json({ 
         status: 200,
@@ -48,20 +35,6 @@ export const PhotographersList: RequestHandler = async (req, res) => {
 };
 
 export const getAlbum: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ 
-            status: 401,
-            message: "Unauthorized."
-        });
-    }
-    const accessToken: string = req.headers.authorization.replace("Bearer ", "");
-    if (accessToken != "admin") {   //imitation of admin user
-        return res.status(403).json({ 
-            status: 403,
-            message: "You do not have access rights."
-        });
-        
-    }
     const album: string = req.params.album;
     const result = await getSpecificAl(album);
     if (!result.length) {
@@ -77,19 +50,6 @@ export const getAlbum: RequestHandler = async (req, res) => {
 };
 
 export const addUsersOnPhoto: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ 
-            status: 401,
-            message: "Unauthorized."
-        });
-    }
-    const accessToken: string = req.headers.authorization.replace("Bearer ", "");
-    if (accessToken != "admin") { //imitation of admin user
-        return res.status(403).json({ 
-            status: 403,
-            message: "You do not have access rights."
-        }); 
-    }
     const imgid: number = Number(req.params.id);
     const users: string = req.body.users;
     const imgResult = await getImageById(imgid);
@@ -119,19 +79,6 @@ export const addUsersOnPhoto: RequestHandler = async (req, res) => {
 };
 
 export const addAlbumPrice: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ 
-            status: 401,
-            message: "Unauthorized."
-        });
-    }
-    const accessToken: string = req.headers.authorization.replace("Bearer ", "");
-    if (accessToken != "admin") { // imitation of admin user
-        return res.status(403).json({ 
-            status: 403,
-            message: "You do not have access rights."
-        });     
-    }
     const albumName: string = req.params.album;
     const albResult = await getAlbumInfo(albumName);
     if (!albResult.length) {

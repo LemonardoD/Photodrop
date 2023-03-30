@@ -22,4 +22,4 @@ export const uploads3Multiple = multer({
 export const s3keys = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_ID as string,
   secretAccessKey: process.env.AWS_SECRET as string,
-}); 
+});

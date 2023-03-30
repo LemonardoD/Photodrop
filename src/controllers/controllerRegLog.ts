@@ -1,11 +1,10 @@
 import { RequestHandler } from "express";
 import bcrypt from "bcrypt";
-import jwt, { VerifyErrors } from "jsonwebtoken";
-import { acToken, rfToken } from "../utils/tokens";
+import { accessTokenCreation, refreshTokenCreation } from "../utils/tokens";
 import { LengthValidation, loginValidation } from "../utils/loginValid";
-import { Photographers, getPhotograper, getPhotograperByReftoken, insertPhotographerDB, updateTokens } from "../db/services/photographerServ";
+import { Photographers, getPhotograper, insertPhotographerDB, updateTokens } from "../db/services/photographerServ";
 
-export const  insertPhotographer: RequestHandler = async (req, res) => {	
+export const  insertPhotographer: RequestHandler = async (req, res) => {
     const info: Photographers = req.body;
     if (!info.login || !info.password){
         return res.status(406).json({
@@ -19,7 +18,7 @@ export const  insertPhotographer: RequestHandler = async (req, res) => {
             message: "Login can contain only letters and the underscore character. Correct ur login and try again! Length of login & password must be more than 5."
         });
     }
-    const result: Photographers[] = await getPhotograper(info.login);
+    const result = await getPhotograper(info.login);
     if (result.length) {
         return res.status(200).json({ 
             status: 200,
@@ -36,85 +35,62 @@ export const  insertPhotographer: RequestHandler = async (req, res) => {
         status: 201,
         message: `Photographer ${info.login} successfully registrated! W8 till we activate ur profile.`
     });
+    
 };
 
-export const  loginPhotographer: RequestHandler = async (req, res) => {	
-    const logInInfo: Photographers = req.body;
-    if (!logInInfo.login || !logInInfo.password){
+export const  loginPhotographer: RequestHandler = async (req, res) => {
+    if (!req.body.login || !req.body.password) {
         return res.status(406).json({ 
             status: 406,
             message: "U must fill up the form!"
         });
-    } else {
-        const result: Photographers[] = await getPhotograper(logInInfo.login);
-        if(result.length){
-            if(bcrypt.compareSync(logInInfo.password, result[0].password) && result[0].aproved === 1){
-                // Creating  access token
-                const accessToken:string = jwt.sign({data: logInInfo.login}, acToken, {expiresIn: "30m"});
-                // Creating refresh token
-                const refreshToken = jwt.sign({data: logInInfo.login}, rfToken, {expiresIn: "1d"});
-                // assigning refresh token in http-only cookie 
-                res.cookie("login", logInInfo.login, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-                res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-                res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-                // adding tokens to DB
-                await updateTokens(logInInfo.login, accessToken, refreshToken);
-                return res.status(200).json({ 
-                    status: 200,
-                    message: `Welcome ${logInInfo.login}`,
-                    token: accessToken,
-                    refreshtoken: refreshToken
-                });
-            }else if(bcrypt.compareSync(logInInfo.password, result[0].password) && result[0].aproved === 0){
-                return res.status(404).json({ 
-                    status: 404,
-                    message: "Sorry but you haven't been aproved yet."
-                });
-            }else{
-                return res.status(406).json({ 
-                    status: 406,
-                    message: "Incorrect password, try again."
-                });
-            }    
-        }else{
-            return res.status(406).json({ 
-                status: 406,
-                message: "Invalid credentials."
-            });
-        }
     }
-};
-
-export const refeshTokens: RequestHandler = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ 
-            status: 401,
-            message: "Unauthorized."
+    const logInInfo: Photographers = req.body;
+    const result = await getPhotograper(logInInfo.login);
+    if (!result.length) {
+        return res.status(406).json({ 
+            status: 406,
+            message: "Invalid credentials."
         });
     }
-    const reqToken: string = req.headers.authorization.replace("Bearer ", "");
-    const tokenInDB = await getPhotograperByReftoken(reqToken);
-    if (!tokenInDB.length) {
+    if (!bcrypt.compareSync(logInInfo.password, result[0].password)) {
+        return res.status(406).json({ 
+            status: 406,
+            message: "Incorrect password, try again."
+        });
+    }
+    if (result[0].aproved === 0) {
         return res.status(404).json({ 
             status: 404,
-            message: "Wrong token."
+            message: "Sorry but you haven't been aproved yet."
         });
     }
-    jwt.verify(reqToken, rfToken, async (err:  VerifyErrors | null) => {
-        if (err) {
-            return res.status(403).json({
-                status: 403,
-                message: "Token expired."
-            });
-        }
-        // if correct refreshtoken we create & send a new pair of tokens
-        const accessToken: string = jwt.sign({data: tokenInDB[0].login},acToken, {expiresIn: "30m"});
-        const refreshToken: string = jwt.sign({data: tokenInDB[0].login}, rfToken, {expiresIn: "1d"});
-        // reassigning tokens to DB and cookies
-        res.cookie("login", tokenInDB[0].login, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
-        await updateTokens(tokenInDB[0].login, accessToken, refreshToken);
-        return res.json({ accessToken,  refreshToken});   
-    })
+    const accessToken = await accessTokenCreation(logInInfo.login)
+    const refreshToken = await refreshTokenCreation(logInInfo.login)
+    // assigning refresh token in http-only cookie
+    res.cookie("login", logInInfo.login, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    // adding tokens to DB
+    await updateTokens(logInInfo.login,  accessToken, refreshToken);
+    return res.status(200).json({ 
+        status: 200,
+        message: `Welcome ${logInInfo.login}`,
+        token: accessToken,
+        refreshtoken: refreshToken
+    });
+};
+
+export const refeshTokens: RequestHandler = async (req, res, ) => {
+    const login = req.body.login;
+    const tokenInDB = await getPhotograper(login);
+    // if correct refreshtoken we create & send a new pair of tokens
+    const accessToken = await accessTokenCreation(tokenInDB[0].login)
+    const refreshToken = await refreshTokenCreation(tokenInDB[0].login)
+    // reassigning tokens to DB and cookies
+    res.cookie("login", login, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    res.cookie("jwtAccess", accessToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    res.cookie("jwtRefresh", refreshToken, {httpOnly: true, maxAge: Number(process.env.TOKEN_LIFETIME)});
+    await updateTokens(tokenInDB[0].login, accessToken, refreshToken);
+    return res.json({ accessToken,  refreshToken});
 };

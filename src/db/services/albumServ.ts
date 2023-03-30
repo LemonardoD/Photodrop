@@ -36,7 +36,7 @@ export async function getSpecificAl(albumName: string) {
 };
 
 export async function getAlbums() {
-    return await db.select().from(albums)
+    return db.select().from(albums)
 };
 
 export async function insertAlbum(album: NewAlbum): Promise<MySqlRawQueryResult> {
