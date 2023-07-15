@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.1334.0",
+    "jimp": "^0.22.7"
+  },
+  "name": "lambdafram",
+  "version": "1.0.0",
+  "main": "index.cjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

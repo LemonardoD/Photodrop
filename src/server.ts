@@ -1,21 +1,23 @@
 import express from "express";
-import Routes from "./routers/routers"; 
+import signInUpRouter from "./routers/signInUpRoutes";
+import adminRoutes from "./routers/adminRoutes";
 import { json } from "body-parser";
-import dotenv from "dotenv";
-import cors  from "cors";
+import cors from "cors";
+import * as dotenv from "dotenv";
+import imgRoutes from "./routers/imgRoutes";
 dotenv.config();
 
 const app = express();
 app.use(cors());
-const port = Number(process.env.PORT);
-const host = process.env.HOST as string;
-export const botToken = process.env.BOT_TOKEN as string;
-export const bucket = process.env.AWS_BUCKET as string;
+
+const { PORT, HOST } = <{ PORT: number; HOST: string }>(<unknown>process.env);
 
 app.use(json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/", Routes);
+app.use("/", adminRoutes);
+app.use("/", imgRoutes);
+app.use("/", signInUpRouter);
 
-app.listen(port, host,() => {
-  console.log(`Running at http://${host}:${port}`);
+app.listen(PORT, HOST, () => {
+    console.log(`Running at http://${HOST}:${PORT}`);
 });
