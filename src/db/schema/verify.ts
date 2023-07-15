@@ -1,12 +1,14 @@
 import { int, serial, varchar } from "drizzle-orm/mysql-core/columns";
-import { mysqlTable } from "drizzle-orm/mysql-core/table";
+import { InferModel, mysqlTable } from "drizzle-orm/mysql-core/table";
 
-export const tableFVerify = mysqlTable("verify", {
+export type PhoneVerify = InferModel<typeof phVerify>;
+export type NewPhoneVerify = InferModel<typeof phVerify, "insert">;
+
+export const phVerify = mysqlTable("verify", {
     id: serial("id").primaryKey().notNull(),
-    telegramid: varchar("telegramid", { length: 50 }),
-    verifycode: varchar("verifycode", { length: 45 }),
+    telegramId: varchar("telegramId", { length: 50 }),
+    verifyCode: varchar("verifyCode", { length: 45 }),
     timestamp: int("timestamp"),
-    trycount: int("trycount"),
-    phone: varchar("phone", { length: 70 })
-    }
-);
+    tryCount: int("tryCount"),
+    phone: varchar("phone", { length: 70 }),
+});

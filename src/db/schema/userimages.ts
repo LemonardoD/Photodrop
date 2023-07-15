@@ -1,19 +1,24 @@
-import { mysqlTable } from "drizzle-orm/mysql-core/table";
+import { InferModel, mysqlTable } from "drizzle-orm/mysql-core/table";
 import { users } from "./users";
 import { serial, varchar } from "drizzle-orm/mysql-core/columns";
 import { foreignKey } from "drizzle-orm/mysql-core/foreign-keys";
 import { index } from "drizzle-orm/mysql-core/indexes";
 
-export const userimages = mysqlTable("userimages", {
-    id: serial("id").primaryKey().notNull(),
-    phone: varchar("phone", { length: 100 }),
-    photopath: varchar("photopath", { length: 255 }),
+export type UserImages = InferModel<typeof userImages>;
+export type NewUserImages = InferModel<typeof userImages, "insert">;
+
+export const userImages = mysqlTable(
+    "userimages",
+    {
+        id: serial("id").primaryKey().notNull(),
+        phone: varchar("phone", { length: 100 }),
+        photoPath: varchar("photoPath", { length: 255 }),
     },
-    (userimages) => ({
-        alb: foreignKey(({
-            columns: [userimages.phone],
+    (userImages) => ({
+        alb: foreignKey({
+            columns: [userImages.phone],
             foreignColumns: [users.phone],
-        })),
-        usr_idx: index("usr_idx").on(userimages.phone)
+        }),
+        usr_idx: index("usr_idx").on(userImages.phone),
     })
 );
