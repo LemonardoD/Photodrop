@@ -2,8 +2,8 @@ import AWS from "aws-sdk";
 import Jimp from "jimp";
 
 const s3 = new AWS.S3({
-    accessKeyId: "AKIA5DSXLYKGNBJH35ZZ",
-    secretAccessKey: "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",
+    accessKeyId: "",
+    secretAccessKey: "",
 });
 export async function handler(event) {
     const key = event.Records[0].s3.object.key;
